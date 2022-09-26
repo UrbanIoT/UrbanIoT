@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>UrbanIoT</title>
+
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description"
+        content="Showing the pollution tracked by the UrbanIoT sensors" />
+
+    <link href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" rel="stylesheet" />
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/drawing/0/atlas-drawing.min.css" type="text/css" />
+    <script src="https://atlas.microsoft.com/sdk/javascript/drawing/0/atlas-drawing.min.js"></script>
+    <link rel="stylesheet" href="azure-maps-layer-legend.min.css" type="text/css" />
+    <script src="azure-maps-layer-legend.min.js"></script>
+
+    <script>
+        var gradientLegend = {
+            type: 'gradient',
+            stops: [
+                {
+                    offset: 0,
+                    color: 'royalblue',
+                    label: 'low'
+                },
+                {
+                    offset: 0.25,
+                    color: 'cyan'
+                },
+                {
+                    offset: 0.5,
+                    color: 'lime',
+                    label: 'medium'
+                },
+                {
+                    offset: 0.75,
+                    color: 'yellow'
+                }, {
+                    offset: 1,
+                    color: 'red',
+                    label: 'high'
+                }
+            ]
+        };
+
+        function GetMap() {
+            //Initialize a map instance.
+            var map = new atlas.Map('map', {
+                center: [6.932, 49.307],
+                // center: [0, 0],
+                zoom: 12,
+                view: 'Auto',
+
+                //Add authentication details for connecting to Azure Maps.
+                authOptions: {
+                    authType: 'subscriptionKey',
+                    subscriptionKey: 'YOUR MAPS KEY HERE'
+                }
+            });
+
+            //Wait until the map resources are ready.
+            map.events.add('ready', function () {
+
+                //Create a data source and add it to the map.
+                datasource = new atlas.source.DataSource();
+                map.sources.add(datasource);
+
+                //Load a data set of points, in this case some sample point of interest data.
+                datasource.importDataFromUrl('http://localhost:7071/api/from/-1/-1/to/8/50');
+
+                // //Create a heatmap and add it to the map.
+                // map.layers.add(
+                //     new atlas.layer.HeatMapLayer(datasource, 'Heatmap', {
+                //     radius: [
+                //         'interpolate',
+                //         ['exponential', 2],
+                //         ['zoom'],
+                //         //For all zoom levels 10 or lower, set the radius to 2 pixels.
+                //         10, 2,
+
+                //         //Between zoom level 10 and 22, exponentially scale the radius from 2 pixels to 50000 pixels.
+                //         22, 50000
+                //     ]
+                // }), 'labels');
+
+                var bubbleLayer = new atlas.layer.BubbleLayer(datasource, 'Pollution: PM 2.5 CF1', {
+                        //Bubbles are made semi-transparent.
+                        opacity: 0.75,
+
+                        //Color of each bubble based on the value of "mag" property using a color gradient of green, yellow, orange, and red.
+                        color: [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'pm_2_5_Cf1'],
+                            0, '#417505',
+                            30, '#8FDC37',
+                            60, '#F6E307',
+                            90, '#F5A623',
+                            120, '#F40C28',
+                            180, '#960618'
+                        ],
+
+                        // /*
+                        //  * Radius for each data point scaled based on the value of "mag" property.
+                        //  * When "mag" = 0, radius will be 2 pixels.
+                        //  * When "mag" = 8, radius will be 40 pixels.
+                        //  * All other "mag" values will be a linear interpolation between these values.
+                        //  */
+                        // radius: [
+                        //     'interpolate',
+                        //     ['linear'],
+                        //     ['get', 'mag'],
+                        //     0, 2,
+                        //     8, 40
+                        // ],
+
+                        // minZoom: 5
+                    });
+
+                map.layers.add(bubbleLayer);
+
+                // Popup
+                var popup = new atlas.Popup({
+                    closeButton: false
+                });
+
+                // Bubble mouseover
+                map.events.add('mousemove', bubbleLayer, function (e) {
+                    var props = e.shapes[0].getProperties();
+
+                    popup.setOptions({
+                        //Update the content of the popup.
+                        content: `<div style="padding:10px;">
+                            ${props.deviceId}<br/>
+                            PM 1.0 CF1: ${props.pm_1_0_Cf1}<br/>
+                            PM 2.5 CF1: ${props.pm_2_5_Cf1}<br/>
+                            PM 10.0 CF1: ${props.pm_10_0_Cf1}<br/>
+                            Temp: ${props.temp} °C<br/>
+                            Hum: ${props.hum} %<br/>
+                            </div>`,
+
+                        //Update the position of the popup with the symbols coordinate.
+                        position: e.position
+                    });
+
+                    //Open the popup.
+                    popup.open(map);
+                });
+
+                //Hide the popup when not hovering a bubble.
+                map.events.add('mouseleave', bubbleLayer, function (e) {
+                    popup.close();
+                });
+
+                // Map controls
+                map.controls.add(
+                    new atlas.control.StyleControl({
+                        style: 'auto',
+                        mapStyles: ['road_shaded_relief', 'satellite_road_labels'],
+                        layout: 'icons'
+                    })
+                    , {
+                        position: 'top-left'
+                    });
+
+                // Legend
+                var legend = new atlas.control.LegendControl({
+                    title: 'Legend',
+                    resx: {
+                        low: 'Low',
+                        high: 'High',
+                        'no-data': 'No data'
+                    }
+                });
+
+                //Add the legend control to the map.
+                map.controls.add(legend, {
+                    position: 'bottom-left'
+                });
+
+                var layerControl = new atlas.control.LayerControl({
+                    legendControl: legend,
+                    dynamicLayerGroup: {
+                        groupTitle: 'Layers',
+                        layout: 'checkbox'
+                    }
+                });
+
+                map.controls.add(layerControl, {
+                    position: 'top-right'
+                });
+            });
+        }
+    </script>
+</head>
+
+<body onload="GetMap()">
+    <div id="map" style="position:fixed;width:100%;min-width:290px;height:100%;min-height:290px;"></div>
+</body>
+
+</html>

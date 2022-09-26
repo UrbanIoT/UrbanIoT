@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+    "AzureWebJobsStorage": "<ConnectionString>",
+    "EventHubConnectionAppSetting": "<ConnectionString>",
+    "STACK_API_KEY": "YourSuperSecretKey",
+    "STACK_APPLICATION_ID": "YourApplicationId",
+    "STACK_BASE_URL": "https://eu1.cloud.thethings.network/api/v3"
+  }
+}

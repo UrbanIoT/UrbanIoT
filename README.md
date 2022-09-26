@@ -1,58 +1,54 @@
-# Mobile Environmental Monitoring 
-
-## TODOS:
-
-[ ] Problem beschreiben
-[ ] Lösung beschreiben
-[ ] Vorgehen beschreiben
-
-[ ] VS Code + Plugins
-[ ] Arduino + PlatformIO
-
-[ ] Firmware: BME680 auslesen
-[ ] Firmware: PAX Counter
-[ ] Firmware: Daten per LoRa verschicken
-[ ] Firmware: UI
-
-[ ] TTN einrichten
-
-[ ] Azure IoT Hub
-[ ] Azure Event Hub
-[ ] Azure SQL DB einrichten
-[ ] Azure Storage Account
-[ ] Azure Function für Daten in DB schreiben
-[ ] Azure Function TTN Integration
-[ ] TTN Azure IoT Hub Integration
-
-[ ] Azure Maps
-[ ] Azure WebService
-[ ] Fronted
-
-[ ] Hardware: Adapterboard
-[ ] Hardware: Hülle
-
-### UI
-* Status: GPS Fix
-* Status: LoRa join
-* Status: Pakete senden
-* Sensor Status: Temp, Hum, Druck, ...
-* Einstellungen:
-    * Sensorenauswahl - Welche Sensoren aktiv
-    * LoRa Daten
-    * LoRa Senderythmus
+![alt text](docs/logo.png "UrbanIoT")
+# UrbanIoT
 
 
-### Grafana Dashboard
-grafana/grafana:8.5.4
+# Azure Maps
 
-GF_INSTALL_PLUGINS
-grafana-simple-json-datasource 1.4.2,grafana-clock-panel 2.0.0,grafana-piechart-panel 1.6.2,grafana-worldmap-panel 0.3.3,ryantxu-ajax-panel 0.1.0,vonage-status-panel 1.0.11,grafana-sentry-datasource 1.0.1
+# Azure SQL DB
 
-GF_DATABASE_TYPE
-sqlite3
+# Event Hubs Namespace
+## Event Hubs
+### events
+The Event Hub *events* has a partition count of *4* and a message retention of *7 days*.
 
-GF_DATABASE_URL
-sqlite3:///var/lib/grafana/grafana.db?cache=private&mode=rwc&_journal_mode=WAL
+### telemetry
+The Event Hub *telemetry* has a partition count of *4* and a message retention of *7 days*.
 
-### Azure Cost Est.
-https://azure.com/e/50f49e0c4c554796b976607ddce41de9
+# Azure Function
+## TTN Events
+### Configuration
+```bash
+EVENTHUB_CONNECTION_STRING = YourEventHubConnectionString
+
+STACK_API_KEY = YourSuperSecretKey
+STACK_APPLICATION_ID = YourApplicationId
+STACK_BASE_URL = https://eu1.cloud.thethings.network/api/v3
+```
+
+## Telemetry To DB
+### Configuration
+```bash
+SQLDBConnectionString = YourSqlConnectionString
+EventHubConnectionAppSetting = YourEventHubConnectionString
+```
+# Azure IoT Hub
+## Message routing
+
+### Custom Endpoints
+
+#### StackEvents
+Endpoint *StackEvents* to Event Hubs Namespace. Sends to event hub namespace instance *events*, uses *Key-based*-Authentication. 
+
+#### TelemetryEvents
+Endpoint *TelemetryEvents* to Event Hubs Namespace. Sends to event hub namespace instance *telemetry*, uses *Key-based*-Authentication. 
+
+### Routes
+
+#### TTSTwinChangeEvents
+Route *TTSTwinChangeEvents* sends *Device Twin Change Events* to endpoint *StackEvents*, using the routing query `IS_OBJECT($body.properties.desired) OR IS_OBJECT($body.tags)`.
+
+##### TTSDeviceLifecycleEvents
+Route *TTSDeviceLifecycleEvents* sends *Device Lifecycle Events* to endpoint *StackEvents*, using the routing query `true`.
+
+#### NewTelemetryEvents
+Route *TTSDeviceLifecycleEvents* sends *Device Telemetry Messages* to endpoint *TelemetryEvents*, using the routing query `true`.

@@ -58,7 +58,7 @@
                 //Add authentication details for connecting to Azure Maps.
                 authOptions: {
                     authType: 'subscriptionKey',
-                    subscriptionKey: 'YOUR MAPS KEY HERE'
+                    subscriptionKey: 'vDsNnpw0gMg_rnfkDK99qFpqLqdcisO78ZnQZsQyouE' // Enter your Azure Maps Key here
                 }
             });
 
@@ -70,7 +70,7 @@
                 map.sources.add(datasource);
 
                 //Load a data set of points, in this case some sample point of interest data.
-                datasource.importDataFromUrl('http://localhost:7071/api/from/-1/-1/to/8/50');
+                datasource.importDataFromUrl('https://urbaniot-httptrigger-function.azurewebsites.net/api/from/6/49/to/7/50'); // Enter your HTTP Trigger function here
 
                 // //Create a heatmap and add it to the map.
                 // map.layers.add(

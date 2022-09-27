@@ -1,7 +1,13 @@
 name: Deploy db functions to function app with a Windows environment
 
 on:
-  [push]
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
 
 env:
       AZURE_FUNCTIONAPP_PACKAGE_PATH: 'functions/db_functions' # set this to the path to your web app project, defaults to the repository root
